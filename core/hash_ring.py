@@ -43,7 +43,7 @@ class HashRing:
         return self.ring[idx][1]    # ดึง node_id ใน tuple
 
     def remove_node(self, node_id):
-        # ลบรหัสอา่คารที่ไม่มีอยู่
+        # ลบรหัสอาคารที่ไม่มีอยู่
         if node_id not in self.added_nodes:
             return
 
