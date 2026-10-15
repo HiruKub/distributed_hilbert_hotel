@@ -14,7 +14,7 @@ class HashRing:
         self._v_node = v_node
         self._salt = str(salt)
         self._ring = []
-        self._nodes = set()    
+        self._nodes = set()
 
     @property
     def v_node(self):
@@ -39,7 +39,7 @@ class HashRing:
         return node_id in self._nodes
 
     def __repr__(self):
-        return f"HashRing(N={self.node_count}, V={self._v_node}, salt={self._salt!r})" 
+        return f"HashRing(N={self.node_count}, V={self._v_node}, salt={self._salt!r})"
 
     def _node_position(self, node_id, j):
         return hash64(f"{self.salt}node:{node_id}:{j}")
@@ -47,6 +47,7 @@ class HashRing:
     def _guest_position(self, c, s):
         return hash64(f"{self.salt}guest:{c}:{s}")
 
+    # เอาไว้เผื่ออยากใช้
     def has_node(self, node_id):
         return node_id in self._nodes
 
@@ -59,7 +60,7 @@ class HashRing:
             if item[1] == node_id:
                 points.append(item[0])
         return points
-    
+
     def add_node(self, node_id):
         # เพิ่มรหัสอาคารที่มีอยู่แล้ว
         if node_id in self._nodes:
