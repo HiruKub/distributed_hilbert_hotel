@@ -1,5 +1,3 @@
-import hashlib
-
 
 class Guest:
     def __init__(self, channel_id: int, sequence_id: int, node_id: str = None):
