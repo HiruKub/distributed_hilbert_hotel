@@ -127,6 +127,33 @@ class AVLTree:
         node.set_height()
         return self.__rebalance(node)
 
+    def range_query(self, start_key, end_key):
+        MAX_HASH = (1 << 64) - 1 # 2^64 - 1
+
+        if start_key <= end_key:
+            results = []
+            self._range_query(self.root, start_key, end_key, results)
+            return results
+
+        results_part1 = []
+        results_part2 = []
+
+        self._range_query(self.root, start_key, MAX_HASH, results_part1)
+        self._range_query(self.root, -1, end_key, results_part2)
+
+        return results_part1 + results_part2
+
+    def _range_query(self, node, start_key, end_key, results):
+        if not node: return
+
+        if node.key > start_key:
+            self._range_query(node.left, start_key, end_key, results)
+
+        if start_key < node.key <= end_key:
+            results.extend(node.values)
+
+        if node.key < end_key:
+            self._range_query(node.right, start_key, end_key, results)
 
 
 
@@ -144,4 +171,30 @@ def get_inorder_keys(node: AVLNode | None) -> list[int]:
         return []
     return get_inorder_keys(node.left) + [node.key] + get_inorder_keys(node.right)
 
-# --- สคริปต์ทดสอบ AVLTree Delete ---
+# --- สคริปต์ทดสอบ AVLTree Range Query ---
+
+tree = AVLTree()
+
+# แทรกข้อมูลตัวอย่างกระจายตามตำแหน่งแฮช
+data = [
+    (10, (1, 1)),
+    (25, (1, 2)),
+    (50, (1, 3)),
+    (50, (2, 4)),  # Hash Collision ที่ 50
+    (75, (1, 5)),
+    (90, (1, 6))
+]
+
+for k, v in data:
+    tree.insert(k, v)
+
+# Test 1: Range Query ช่วงปกติ (20, 60] -> ควรเจอ Key 25 และ 50 (รวม 3 คน)
+res1 = tree.range_query(20, 60)
+print("=== Test 1: Normal Range Query (20, 60] ===")
+print(f"Result: {res1} (คาดหวังแขกจาก Key 25 และ 50)")
+
+# Test 2: Range Query กรณี Wrap-Around เช่นช่วง (70, 30] (ข้ามขอบวงแหวน)
+# ควรได้แขกจาก Key 75, 90 (ช่วงแรก) และ Key 10, 25 (ช่วงสอง)
+res2 = tree.range_query(70, 30)
+print("\n=== Test 2: Wrap-around Range Query (70, 30] ===")
+print(f"Result: {res2}")
