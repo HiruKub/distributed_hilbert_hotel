@@ -1,6 +1,12 @@
 class HotelSystem:
-    def __init__(self, method):
+    def __init__(self, num_buildings, num_rooms_per_building, method):
+        from tree import AVLTree
+        self.__B = num_buildings
+        self.__S = num_rooms_per_building
         self.__method = method
+        self.__hash_ring_tree = AVLTree()
+        self.__guests = {}
+        self.__room_id = {}
 
 if __name__ == "__main__":
     ...
