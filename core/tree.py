@@ -66,3 +66,82 @@ class AVLTree:
             node = self.__left_rotate(node)
 
         return node
+
+    def delete(self, key, value):
+        # In-Order Successor
+        self.root = self._delete(self.root, key, value)
+
+    def _get_min_node(self, node):
+        current = node
+        while current.left: current = current.left
+        return current
+
+    def _delete(self, node, key, value):
+        if not node: return None
+
+        if key < node.key:
+            node.left = self._delete(node.left, key, value)
+        elif key > node.key:
+            node.right = self._delete(node.right, key, value)
+        else:
+            if value in node.values:
+                node.values.remove(value)
+
+            if node.values: return node
+
+            if not node.left: return node.right
+            elif not node.right: return node.left
+
+            successor = self._get_min_node(node.right)
+            node.key = successor.key
+            node.values = successor.values
+            node.right = self._delete_node_by_key(node.right, successor.key)
+
+            if not node: return None
+
+            node.set_height()
+            return self.__rebalance(node)
+
+    def _delete_node_by_key(self, node, key):
+        if not node:
+            return None
+
+        if key < node.key:
+            node.left = self._delete_node_by_key(node.left, key)
+        elif key > node.key:
+            node.right = self._delete_node_by_key(node.right, key)
+        else:
+            if not node.left:
+                return node.right
+            elif not node.right:
+                return node.left
+
+            successor = self._get_min_node(node.right)
+            node.key = successor.key
+            node.values = successor.values
+            node.right = self._delete_node_by_key(node.right, successor.key)
+
+        if not node:
+            return None
+
+        node.set_height()
+        return self.__rebalance(node)
+
+
+
+
+def is_balanced(node: AVLNode | None) -> bool:
+    """ตรวจสอบว่าทุก Node ใน Tree มี Balance Factor อยู่ในช่วง [-1, 1] หรือไม่"""
+    if not node:
+        return True
+    if abs(node.get_balance()) > 1:
+        return False
+    return is_balanced(node.left) and is_balanced(node.right)
+
+def get_inorder_keys(node: AVLNode | None) -> list[int]:
+    """ดึง Key ทั้งหมดใน Tree ออกมาตามลำดับน้อยไปมาก (In-order Traversal)"""
+    if not node:
+        return []
+    return get_inorder_keys(node.left) + [node.key] + get_inorder_keys(node.right)
+
+# --- สคริปต์ทดสอบ AVLTree Delete ---
