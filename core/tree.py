@@ -5,15 +5,36 @@ class AVLNode:
         self.height = self.set_height()
         self.left = self.right = None
 
+    @staticmethod
+    def get_height(node):
+        return node.height if node else 0
+
     def set_height(self):
-        left_h = self.left.height if self.left else 0
-        right_h = self.right.height if self.right else 0
-        self.height = 1 + max(left_h, right_h)
+        self.height = 1 + max(self.get_height(self.left), self.get_height(self.right))
 
     def get_balance(self):
-        left_h = self.left.height if self.left else 0
-        right_h = self.right.height if self.right else 0
-        return left_h - right_h
+        return self.get_height(self.left) - self.get_height(self.right)
 
 class AVLTree:
-    ...
+    def __init__(self):
+        self.root = None
+
+    def __right_rotate(self, root):
+        y = root.left
+        root.left = y.right
+        y.right = root
+
+        root.set_height()
+        y.set_height()
+
+        return y
+
+    def __left_rotate(self, root):
+        y = root.right
+        root.right = y.left
+        y.left = root
+
+        root.set_height()
+        y.set_height()
+
+        return y
