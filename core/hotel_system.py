@@ -4,39 +4,59 @@ class HotelSystem:
         self.__B = num_buildings
         self.__S = num_rooms_per_building
         self.__method = method
-        self.__hash_ring_tree = AVLTree()
+        self.__hash_tree = AVLTree()
         self.__guests = {}
         self.__room_id = {}
 
+    @property
+    def method(self): return self.__method
+
+    def add_guest(self, c, s, room_index) -> None:
+        guest = (c, s)
+        self.__guests[guest] = room_index
+        self.__room_id[room_index] = guest
+
+        from hash_ring import hash64
+        guest_hash = hash64(f"{self.__method.salt}guest:{c}:{s}")
+        self.__hash_tree.insert(guest_hash, guest)
+
+    def add_building(self, node_id):
+        added = self.__method.add_node(node_id)
+        if not added:
+            return []
+
+        relocated_guests = []
+
+        if hasattr(self.__method, "_ring"):
+            if self.__method.node_count == 1:
+                all_guests = self.__hash_tree.range_query(-1, (1 << 64) - 1)
+                return [(guest, node_id) for guest in all_guests]
+
+            ring_list = self.__method._ring
+            visited_guests = set()
+
+            for idx, (pos, nid, j) in enumerate(ring_list):
+                if nid == node_id:
+                    prev_pos = ring_list[idx - 1][0] if idx > 0 else ring_list[-1][0]
+                    
+                    if prev_pos == pos:
+                        guests_in_range = self.__hash_tree.range_query(-1, (1 << 64) - 1)
+                    else:
+                        guests_in_range = self.__hash_tree.range_query(prev_pos, pos)
+                    
+                    for guest in guests_in_range:
+                        if guest not in visited_guests:
+                            visited_guests.add(guest)
+                            target_node = self.__method.get_node(guest[0], guest[1])
+                            if target_node == node_id:
+                                relocated_guests.append((guest, target_node))
+
+        else:
+            for guest in list(self.__guests.keys()):
+                target_node = self.__method.get_node(guest[0], guest[1])
+                if target_node == node_id:
+                    relocated_guests.append((guest, target_node))
+
+        return relocated_guests
 if __name__ == "__main__":
     ...
-    # from hash_ring import HashRing
-
-    # virtual_node_count = 32
-    # ring = HashRing(virtual_node_count)
-    # hs = HotelSystem(ring)
-    # print(f'{"-"*5} Add Building Test {"-"*5}')
-    # print(f'#1: {hs.add_building("A")}\t| expected: True') # Normal
-    # print(f'#2: {hs.add_building("B")}\t| expected: True') # Different Name
-    # print(f'#3: {hs.add_building("A")}\t| expected: False') # Duplicate Name
-    # print(f'#4: {hs.add_building(1)}\t| expected: False') # Invalid Input
-    # print(f'#5: {hs.point_count}\t \t| expected: {virtual_node_count * 2}') # point count
-    # print()
-
-    # virtual_node_count = 32
-    # ring = HashRing(virtual_node_count)
-    # hs = HotelSystem(ring)
-    # print(f'{"-"*5} Add Guest Test {"-"*5}')
-    # print(f'#1: {hs.add_guest(1, 1)}\t| expected: False') # No Building
-    
-    # hs.add_building("A")
-    # print(f'#2: {hs.add_guest(1, 1)}\t| expected: True') # Normal
-    # print(f'#3: {hs.add_guest(1, 1)}\t| expected: False') # Duplicate
-    # print(f'#4: {hs.add_guest(1, 2)}\t| expected: True') # Add more
-    # print(f'#5: {hs.add_guest(2, 1)}\t| expected: True') # Add more
-    # print(f'#6: {hs.guest_count}\t\t| expected: 3') # Count Guest
-    # print(f'#7: {hs.all_room_no}\t| expected: 3 distinct room no') # room no
-
-    # test_guest = hs.search_by_guest(2, 1)
-    # print(f'#8: {hs.search_by_room(test_guest.node_id, test_guest.room_no)}\t| expected: (2, 1)') # test consistency
-
