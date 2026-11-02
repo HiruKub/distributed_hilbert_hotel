@@ -41,7 +41,6 @@ class HotelSystemHashRing:
         self.__guests_by_node[node_id].add((c, s))
 
         return True
-
     def add_guest_group(self, c: int, s_start: int, count: int):
         if not isinstance(c, int) or c < 1:
             raise ValueError("หมายเลขช่องทาง c ต้องเป็นจำนวนเต็ม >= 1")
@@ -57,5 +56,20 @@ class HotelSystemHashRing:
             if (c, s) in self.__guests_by_id: 
                 raise ValueError("ในช่วงมีแขกที่รหัสทับกับแขกที่มีอยู่ ไม่สามารถเพิ่มแขกได้ทั้งกลุ่ม")
         for s in target_range: self.add_guest(c, s)
+
+        return True
+    def remove_guest(self, c: int, s: int):
+        if not isinstance(c, int) or c < 1:
+            raise ValueError("หมายเลขช่องทาง c ต้องเป็นจำนวนเต็ม >= 1")
+        if not isinstance(s, int) or s < 1:
+            raise ValueError("ลำดับ s ต้องเป็นจำนวนเต็ม >= 1")
+        if (c, s) not in self.__guests_by_id:
+            raise ValueError("ไม่มีแขกในระบบ")
+
+        node_id = self.__router.get_node(c, s)
+
+        del self.__guests_by_id[(c, s)]
+        if node_id in self.__guests_by_node:
+            self.__guests_by_node[node_id].remove((c, s))
 
         return True
