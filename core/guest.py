@@ -1,7 +1,7 @@
 
 class Guest:
     def __init__(self, channel_id: int, sequence_id: int, node_id: str = None):
-        if not isinstance(channel_id, int) or not isinstance(channel_id, int):
+        if not isinstance(channel_id, int) or not isinstance(sequence_id, int):
             raise TypeError("channel_id and sequence_id must be int")
 
         if channel_id < 1 or sequence_id < 1:
