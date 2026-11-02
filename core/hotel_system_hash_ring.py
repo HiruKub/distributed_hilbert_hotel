@@ -73,3 +73,33 @@ class HotelSystemHashRing:
             self.__guests_by_node[node_id].remove((c, s))
 
         return True
+
+    def search_by_id(self, c, s):
+        if not isinstance(c, int) or c < 1:
+            raise ValueError("หมายเลขช่องทาง c ต้องเป็นจำนวนเต็ม >= 1")
+        if not isinstance(s, int) or s < 1:
+            raise ValueError("ลำดับ s ต้องเป็นจำนวนเต็ม >= 1")
+
+        result = self.__guests_by_id[(c, s)]
+        if not result: raise ValueError("ไม่พบรหัสแขกที่ค้นหา")
+
+        return result.node_id, result.room_no
+    def search_by_node_room(self, node_id, room_no):
+        if node_id not in self.__guests_by_node:
+            raise ValueError(f"ไม่พบ Node ID '{node_id}' ในระบบ")
+
+        import math
+        z_prime = room_no - 1
+        w = int((math.isqrt(8 * z_prime + 1) - 1) // 2)
+        t = (w * (w + 1)) // 2
+        b = z_prime - t
+        a = w - b
+
+        c = a + 1
+        s = b + 1
+
+        result = self.__guests_by_id.get((c, s))
+        if result and result.node_id == node_id: 
+            return result.c, result.s
+
+        raise ValueError(f"ไม่พบแขกที่ค้นหา")
