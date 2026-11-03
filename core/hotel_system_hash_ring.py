@@ -145,3 +145,21 @@ class HotelSystemHashRing:
                     self.__guests_by_id[(c, s)].node_id = node_id
 
         return True
+    def remove_node(self, node_id: str):
+        if node_id not in self.__guests_by_node:
+            raise ValueError("ไม่มีอาคารนี้ในระบบ")
+
+        if len(self.__guests_by_node) <= 1:
+            raise ValueError("ไม่สามารถลบอาคารได้ เนื่องจากต้องมีอาคารอย่างน้อย 1 อาคารในระบบเสมอ")
+
+        migrate = list(self.__guests_by_node[node_id])
+
+        self.__router.remove_node(node_id)
+        del self.__guests_by_node[node_id]
+
+        for c, s in migrate:
+            target_node = self.__router.get_node(c, s)
+            self.__guests_by_node[target_node].add((c, s))
+            self.__guests_by_id[(c, s)].node_id = target_node
+
+        return True
