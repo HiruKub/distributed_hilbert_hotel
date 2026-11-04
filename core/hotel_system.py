@@ -4,12 +4,19 @@ class HashType(Enum):
     HASH_MOD_N = "hash_mod_n"
 
 class HotelSystem:
-    def __init__(self, N: int, V: int, C: int, s: list[int], mode: HashType = HashType.HASH_RING):
+    def __init__(
+        self, 
+        N: int, 
+        V: int, 
+        C: int, 
+        s: list[int], 
+        mode: HashType = HashType.HASH_RING,
+        salt: str = ""):
         self.__validate_init_params(N, C, s)
                 
         from hash_ring import HashRing
         from hash_mod_n import HashModN
-        self.__router = HashRing(V, "hash_ring_salt") if mode == HashType.HASH_RING else HashModN("hash_mod_n_salt")
+        self.__router = HashRing(V, str(salt)) if mode == HashType.HASH_RING else HashModN(str(salt))
         self.__guests_by_id = {}
         self.__guests_by_node = {}
 
