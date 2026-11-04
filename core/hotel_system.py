@@ -14,8 +14,8 @@ class HotelSystem:
         salt: str = ""):
         self.__validate_init_params(N, C, s)
                 
-        from hash_ring import HashRing
-        from hash_mod_n import HashModN
+        from core.hash_ring import HashRing
+        from core.hash_mod_n import HashModN
         self.__router = HashRing(V, str(salt)) if mode == HashType.HASH_RING else HashModN(str(salt))
         self.__guests_by_id = {}
         self.__guests_by_node = {}
@@ -59,7 +59,7 @@ class HotelSystem:
         if (c, s) in self.__guests_by_id.keys(): raise ValueError(f"มีการเพิ่มแขก ({c},{s})ในระบบแล้ว")
         
         # บันทึกลง Primary Index
-        from guest import Guest
+        from core.guest import Guest
         self.__guests_by_id[(c, s)] = Guest(c, s, node_id)
 
         # บันทึกลง Secondary Index
