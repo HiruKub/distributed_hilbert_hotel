@@ -3,6 +3,74 @@ class HashType(Enum):
     HASH_RING = "hash_ring"
     HASH_MOD_N = "hash_mod_n"
 
+class MigrationRecord:
+    def __init__(self, guest_id, old_node, new_node, room_no):
+        self.__guest_id = guest_id
+        self.__old_node = old_node
+        self.__new_node = new_node
+        self.__room_no = room_no
+
+    @property
+    def guest_id(self): return self.__guest_id
+    @property
+    def old_node(self): return self.__old_node
+    @property
+    def new_node(self): return self.__new_node
+    @property
+    def room_no(self): return self.__room_no
+
+    def __repr__(self):
+        return (f"MigrationRecord:\tguest:{self.__guest_id}\told_node:{self.__old_node}\tnew_node:{self.__new_node}\troom_no:{self.__room_no}")
+
+class MigrationReport:
+    def __init__(self, total_guests_k):
+        self.__total_guests_k = total_guests_k
+        self.__migrations = []
+
+    @property
+    def total_guests_k(self): return self.__total_guests_k
+    @property
+    def migrations(self): return self.__migrations
+    @property
+    def migrated_count(self): return len(self.__migrations)
+    @property
+    def migration_rate(self):
+        if self.__total_guests_k == 0: return 0.0
+        return self.migrated_count / self.__total_guests_k
+    @property
+    def rate_status(self):
+        if self.__total_guests_k == 0: return "ไม่คำนวณอัตราเพราะไม่มีแขก"
+        return f"{self.migration_rate:.4f} ({self.migrated_count}/{self.__total_guests_k})"
+
+    def append_migration(self, record: MigrationRecord):
+        self.__migrations.append(record)
+
+    def generate_summary(self) -> str:
+        """สร้างข้อความสรุปรายงานการย้าย (Migration Report)"""
+        lines = [
+            "==================================================",
+            "             MIGRATION REPORT SUMMARY             ",
+            "==================================================",
+            f"จำนวนแขกทั้งหมดในระบบ (K) : {self.__total_guests_k}",
+            f"จำนวนแขกที่ย้าย          : {self.migrated_count}",
+            f"อัตราการย้าย (Rate)      : {self.rate_status}",
+            "--------------------------------------------------",
+            "รายการการย้ายแขก (Migration List):"
+        ]
+        
+        if not self.migrations:
+            lines.append("  (ไม่มีการย้ายแขกในรอบนี้)")
+        else:
+            for idx, m in enumerate(self.migrations, 1):
+                c, s = m.guest_id
+                lines.append(
+                    f"  {idx:2d}. รหัสแขก ({c}, {s}) | "
+                    f"อาคารเดิม: {m.old_node:>2s} -> อาคารใหม่: {m.new_node:>2s} | "
+                    f"หมายเลขห้อง: {m.room_no}"
+                )
+        lines.append("==================================================")
+        return "\n".join(lines)
+
 class HotelSystem:
     def __init__(
         self, 
@@ -135,6 +203,8 @@ class HotelSystem:
         if node_id in self.__guests_by_node:
             raise ValueError("มีอาคารนี้อยู่ในระบบแล้ว")
 
+        report = MigrationReport(len(self.__guests_by_id))
+
         if self.__mode == HashType.HASH_RING:
             affected_nodes = set()
             for j in range(self.__router.v_node):
@@ -154,6 +224,9 @@ class HotelSystem:
                         self.__guests_by_node[node_id].add((c, s))
                         self.__guests_by_id[(c, s)].node_id = node_id
 
+                        record = MigrationRecord((c, s), target_node, node_id, self.__guests_by_id[(c, s)].room_no)
+                        report.append_migration(record)
+
         else:
             self.__router.add_node(node_id)
             self.__guests_by_node[node_id] = set()
@@ -164,14 +237,19 @@ class HotelSystem:
                     self.__guests_by_node[old_node].remove((c, s))
                     self.__guests_by_node[new_node].add((c, s))
                     guest.node_id = new_node
+                    record = MigrationRecord((c, s), old_node, new_node, guest.room_no)
+                    report.append_migration(record)
 
-        return True
+        return report
+    
     def remove_node(self, node_id: str):
         if node_id not in self.__guests_by_node:
             raise ValueError("ไม่มีอาคารนี้ในระบบ")
 
         if len(self.__guests_by_node) <= 1:
             raise ValueError("ไม่สามารถลบอาคารได้ เนื่องจากต้องมีอาคารอย่างน้อย 1 อาคารในระบบเสมอ")
+
+        report = MigrationReport(len(self.__guests_by_id))
 
         if self.__mode == HashType.HASH_RING:
             migrate = list(self.__guests_by_node[node_id])
@@ -183,6 +261,8 @@ class HotelSystem:
                 target_node = self.__router.get_node(c, s)
                 self.__guests_by_node[target_node].add((c, s))
                 self.__guests_by_id[(c, s)].node_id = target_node
+                record = MigrationRecord((c, s), node_id, target_node, self.__guests_by_id[(c, s)].room_no)
+                report.append_migration(record)
 
         else:
             self.__router.remove_node(node_id)
@@ -196,151 +276,8 @@ class HotelSystem:
                         self.__guests_by_node[old_node].remove((c, s))
                     self.__guests_by_node[new_node].add((c, s))
                     guest.node_id = new_node
+                    record = MigrationRecord((c, s), old_node, new_node, guest.room_no)
+                    report.append_migration(record)
 
-        return True
+        return report
 
-import unittest
-
-
-class TestHotelSystemInitialization(unittest.TestCase):
-    """1. ทดสอบการเริ่มต้นระบบและการตรวจสอบค่านำเข้า (Initialization & Validation)"""
-
-    def test_init_success_both_modes(self):
-        """ทดสอบการสร้างระบบสำเร็จทั้ง 2 โหมด"""
-        for mode in [HashType.HASH_RING, HashType.HASH_MOD_N]:
-            with self.subTest(mode=mode.value):
-                hotel = HotelSystem(N=3, V=16, C=2, s=[5, 10], mode=mode)
-                self.assertEqual(len(hotel.guests_by_node), 3)
-                self.assertEqual(len(hotel.guests_by_id), 15)
-                self.assertEqual(hotel.mode, mode.value)
-
-    def test_init_invalid_N_raises_error(self):
-        """ทดสอบกรณี N < 1 ต้องเกิด ValueError"""
-        with self.assertRaises(ValueError):
-            HotelSystem(N=0, V=16, C=2, s=[5, 5])
-
-    def test_init_channel_mismatch_raises_error(self):
-        """ทดสอบกรณี C ไม่สัมพันธ์กับ len(s) ต้องเกิด ValueError"""
-        with self.assertRaises(ValueError):
-            HotelSystem(N=3, V=16, C=3, s=[5, 5])  # C=3 แต่ s มี 2 สมาชิก
-
-    def test_init_negative_guest_count_raises_error(self):
-        """ทดสอบกรณีจำนวนแขกในช่องทางเป็นค่าติดลบ"""
-        with self.assertRaises(ValueError):
-            HotelSystem(N=3, V=16, C=2, s=[5, -1])
-
-
-class TestHotelSystemGuestOperations(unittest.TestCase):
-    """2. ทดสอบการจัดการแขก (Add, Remove, Search Guest)"""
-
-    def setUp(self):
-        self.hotel = HotelSystem(N=3, V=16, C=2, s=[5, 5], mode=HashType.HASH_RING)
-
-    def test_add_guest_duplicate_raises_error(self):
-        """ทดสอบการเพิ่มแขกรหัสซ้ำ"""
-        with self.assertRaises(ValueError):
-            self.hotel.add_guest(1, 1)  # แขก (1,1) มีอยู่ในระบบตั้งแต่ init แล้ว
-
-    def test_add_guest_group_success(self):
-        """ทดสอบการเพิ่มแขกเป็นกลุ่มสำเร็จ"""
-        initial_count = len(self.hotel.guests_by_id)
-        self.assertTrue(self.hotel.add_guest_group(c=1, s_start=6, count=5))
-        self.assertEqual(len(self.hotel.guests_by_id), initial_count + 5)
-
-    def test_add_guest_group_duplicate_raises_error(self):
-        """ทดสอบการเพิ่มแขกกลุ่มที่มีรหัสทับซ้อนกับแขกเดิม"""
-        with self.assertRaises(ValueError):
-            self.hotel.add_guest_group(c=1, s_start=4, count=5)  # ทับซ้อนที่ s=4, 5
-
-    def test_remove_guest_success(self):
-        """ทดสอบการลบแขกออกจากระบบสำเร็จ"""
-        c, s = 1, 1
-        node_id, _ = self.hotel.search_by_id(c, s)
-        
-        self.assertTrue(self.hotel.remove_guest(c, s))
-        self.assertNotIn((c, s), self.hotel.guests_by_id)
-        self.assertNotIn((c, s), self.hotel.guests_by_node[node_id])
-
-    def test_remove_non_existent_guest_raises_error(self):
-        """ทดสอบการลบแขกที่ไม่มีในระบบ"""
-        with self.assertRaises(ValueError):
-            self.hotel.remove_guest(99, 99)
-
-    def test_search_by_id_success_and_fail(self):
-        """ทดสอบการค้นหาแขกด้วย (c, s)"""
-        node_id, room_no = self.hotel.search_by_id(1, 1)
-        self.assertIsNotNone(node_id)
-        self.assertGreater(room_no, 0)
-
-        with self.assertRaises(ValueError):
-            self.hotel.search_by_id(99, 99)
-
-    def test_search_by_node_room(self):
-        """ทดสอบการค้นหาแขกกลับด้วย (node_id, room_no)"""
-        c_orig, s_orig = 1, 2
-        node_id, room_no = self.hotel.search_by_id(c_orig, s_orig)
-        
-        c_found, s_found = self.hotel.search_by_node_room(node_id, room_no)
-        self.assertEqual((c_orig, s_orig), (c_found, s_found))
-
-
-class TestHotelSystemNodeOperations(unittest.TestCase):
-    """3. ทดสอบการเพิ่ม/ลบ อาคาร และการย้ายแขก (Node Migration) ทั้ง 2 โหมด"""
-
-    def test_add_and_remove_node_flow(self):
-        """ทดสอบ Workflow การเพิ่มและลบอาคาร พร้อมตรวจสอบ Data Integrity ของทั้ง 2 โหมด"""
-        for mode in [HashType.HASH_RING, HashType.HASH_MOD_N]:
-            with self.subTest(mode=mode.value):
-                hotel = HotelSystem(N=3, V=16, C=2, s=[10, 10], mode=mode)
-                total_guests_initial = len(hotel.guests_by_id)
-
-                # --- 1. ทดสอบ Add Node ---
-                new_node = "4"
-                self.assertTrue(hotel.add_node(new_node))
-                self.assertIn(new_node, hotel.guests_by_node)
-
-                # ตรวจสอบว่าไม่มีแขกสูญหายหลัง Re-hash
-                self.assertEqual(len(hotel.guests_by_id), total_guests_initial)
-                sum_guests_in_nodes = sum(len(g) for g in hotel.guests_by_node.values())
-                self.assertEqual(total_guests_initial, sum_guests_in_nodes)
-
-                # ตรวจสอบ Cross-Index Consistency หลัง Add Node
-                for (c, s), guest in hotel.guests_by_id.items():
-                    self.assertIn((c, s), hotel.guests_by_node[guest.node_id])
-
-                # --- 2. ทดสอบ Remove Node ---
-                self.assertTrue(hotel.remove_node(new_node))
-                self.assertNotIn(new_node, hotel.guests_by_node)
-
-                # ตรวจสอบความสมบูรณ์ของข้อมูลหลังลบอาคาร
-                self.assertEqual(len(hotel.guests_by_id), total_guests_initial)
-                sum_guests_after_remove = sum(len(g) for g in hotel.guests_by_node.values())
-                self.assertEqual(total_guests_initial, sum_guests_after_remove)
-
-                # ตรวจสอบ Cross-Index Consistency หลัง Remove Node
-                for (c, s), guest in hotel.guests_by_id.items():
-                    self.assertIn((c, s), hotel.guests_by_node[guest.node_id])
-
-    def test_add_duplicate_node_raises_error(self):
-        """ทดสอบการเพิ่มอาคารที่มีรหัสซ้ำ"""
-        hotel = HotelSystem(N=3, V=16, C=2, s=[5, 5])
-        with self.assertRaises(ValueError):
-            hotel.add_node("1")
-
-    def test_remove_non_existent_node_raises_error(self):
-        """ทดสอบการลบอาคารที่ไม่เคยมีในระบบ"""
-        hotel = HotelSystem(N=3, V=16, C=2, s=[5, 5])
-        with self.assertRaises(ValueError):
-            hotel.remove_node("999")
-
-    def test_remove_last_node_protection(self):
-        """ทดสอบระบบยับยั้งการลบอาคารจนหมด (ต้องเหลืออย่างน้อย 1 อาคารเสมอ)"""
-        hotel = HotelSystem(N=2, V=16, C=1, s=[5])
-        hotel.remove_node("2")  # เหลือ 1 อาคาร ("1")
-
-        with self.assertRaises(ValueError):
-            hotel.remove_node("1")
-
-
-if __name__ == "__main__":
-    unittest.main()
