@@ -1,4 +1,4 @@
-from hash_ring import hash64
+from core.hash_ring import hash64
 
 class HashModN:
     def __init__(self, salt=""):

@@ -54,6 +54,16 @@ class HashRing:
     def get_all_nodes(self):
         return sorted(self._nodes)
 
+    def get_node_by_position(self, pos: int):
+        if not self._ring:
+            return None
+
+        idx = bisect.bisect_left(self._ring, (pos,))
+        if idx >= len(self._ring):
+            idx = 0
+
+        return self._ring[idx][1]
+
     def get_points(self, node_id):      # ดึงตัวเลขตำแหน่ง hash
         points = []
         for item in self._ring:

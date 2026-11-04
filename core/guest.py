@@ -1,7 +1,7 @@
 
 class Guest:
     def __init__(self, channel_id: int, sequence_id: int, node_id: str = None):
-        if not isinstance(channel_id, int) or not isinstance(channel_id, int):
+        if not isinstance(channel_id, int) or not isinstance(sequence_id, int):
             raise TypeError("channel_id and sequence_id must be int")
 
         if channel_id < 1 or sequence_id < 1:
@@ -10,12 +10,12 @@ class Guest:
         self._c = channel_id
         self._s = sequence_id
         self._node_id = node_id
-        self._room_no = self.calculatate_room_no(self.c, self.s)
+        self._room_no = self.calculate_room_no(self.c, self.s)
 
         pass
 
     @staticmethod
-    def calculatate_room_no(c: int, s: int):
+    def calculate_room_no(c: int, s: int):
         a = c - 1
         b = s - 1
         return ((a + b) * (a + b + 1)) // 2 + b + 1
