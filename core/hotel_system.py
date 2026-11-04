@@ -280,4 +280,3 @@ class HotelSystem:
                     report.append_migration(record)
 
         return report
-
