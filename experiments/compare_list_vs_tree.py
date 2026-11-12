@@ -150,7 +150,7 @@ def calculate_diff_and_percent(val_list, val_tree, lower_is_better=True):
 
 def run_comparison_benchmark(K_values=[1_000, 10_000], N=10, V=32, salt="0", out_csv=None):
     print("=" * 105)
-    print("   📊 การเปรียบเทียบเชิงประสิทธิภาพหน่วยต่อหน่วย: Core (List+Bisect) vs Tree (AVL Tree)")
+    print("    การเปรียบเทียบเชิงประสิทธิภาพหน่วยต่อหน่วย: Core (List+Bisect) vs Tree (AVL Tree)")
     print(f"      พารามิเตอร์ทดสอบ: อาคารเริ่มต้น N={N}, จุดเสมือน V={V}, Salt={salt}")
     print("=" * 105)
 
@@ -171,7 +171,7 @@ def run_comparison_benchmark(K_values=[1_000, 10_000], N=10, V=32, salt="0", out
     ]
 
     for K in K_values:
-        print(f"\n🔍 [กำลังทดสอบขนาดแขก K = {K:,} คน...]")
+        print(f"\n [กำลังทดสอบขนาดแขก K = {K:,} คน...]")
         res_list = benchmark_single_version(list_system, N=N, V=V, K=K, salt=salt)
         res_tree = benchmark_single_version(tree_system, N=N, V=V, K=K, salt=salt)
 
@@ -215,7 +215,7 @@ def run_comparison_benchmark(K_values=[1_000, 10_000], N=10, V=32, salt="0", out
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(all_comparison_rows)
-        print(f"💾 บันทึกตารางเปรียบเทียบฉบับสมบูรณ์เรียบร้อยที่: {out_csv}")
+        print(f" บันทึกตารางเปรียบเทียบฉบับสมบูรณ์เรียบร้อยที่: {out_csv}")
 
 
 def main():
