@@ -1,9 +1,11 @@
 from core.hash_ring import hash64
+from core.avl_tree import OrderStatisticAVLTree
+
 
 class HashModN:
     def __init__(self, salt=""):
         self._salt = str(salt)
-        self._nodes = []
+        self._nodes = OrderStatisticAVLTree()
 
     @property
     def salt(self):
@@ -11,6 +13,9 @@ class HashModN:
 
     @property
     def node_count(self):
+        return len(self._nodes)
+
+    def __len__(self):
         return len(self._nodes)
 
     def __contains__(self, node_id):
@@ -26,26 +31,25 @@ class HashModN:
         return node_id in self._nodes
 
     def get_all_nodes(self):
-        return sorted(self._nodes)
+        return self._nodes.get_sorted_values()
 
     def add_node(self, node_id):
         if node_id in self._nodes:
             return False
-        self._nodes.append(node_id)
-        return True
+        return self._nodes.append(node_id)
 
     def get_node(self, c, s):
-        if not self._nodes:
+        n = len(self._nodes)
+        if n == 0:
             return None
 
         hashed = self._guest_position(c, s)
-        idx = hashed % len(self._nodes)
-        return self._nodes[idx]
+        idx = hashed % n
+        return self._nodes.get_by_index(idx)
 
     def remove_node(self, node_id):
         if node_id not in self._nodes:
             return False
         if len(self._nodes) == 1:
             return False
-        self._nodes.remove(node_id)
-        return True
+        return self._nodes.remove(node_id)

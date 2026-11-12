@@ -1,8 +1,8 @@
 import hashlib
-import bisect
+from core.avl_tree import AVLTreeMap, AVLTreeSet
 
 
-def hash64(text):       # 8 bytes = 64 bits
+def hash64(text):  # 8 bytes = 64 bits
     hash_byte = hashlib.sha256(text.encode('utf-8')).digest()
     return int.from_bytes(hash_byte[:8], byteorder='big')
 
@@ -13,8 +13,8 @@ class HashRing:
             raise ValueError("v_node must be an integer >= 1")
         self._v_node = v_node
         self._salt = str(salt)
-        self._ring = []
-        self._nodes = set()
+        self._ring = AVLTreeMap()   # เก็บคีย์ (position, node_id, j) -> node_id
+        self._nodes = AVLTreeSet()  # เก็บรหัสอาคารที่เปิดใช้งานอยู่
 
     @property
     def v_node(self):
@@ -47,28 +47,23 @@ class HashRing:
     def _guest_position(self, c, s):
         return hash64(f"{self.salt}guest:{c}:{s}")
 
-    # เอาไว้เผื่ออยากใช้
     def has_node(self, node_id):
         return node_id in self._nodes
 
     def get_all_nodes(self):
-        return sorted(self._nodes)
+        return self._nodes.to_list()
 
     def get_node_by_position(self, pos: int):
-        if not self._ring:
+        result = self._ring.find_ceil_or_first((pos,))
+        if result is None:
             return None
+        return result[1]
 
-        idx = bisect.bisect_left(self._ring, (pos,))
-        if idx >= len(self._ring):
-            idx = 0
-
-        return self._ring[idx][1]
-
-    def get_points(self, node_id):      # ดึงตัวเลขตำแหน่ง hash
+    def get_points(self, node_id):  # ดึงตัวเลขตำแหน่ง hash เรียงจากน้อยไปมาก
         points = []
-        for item in self._ring:
-            if item[1] == node_id:
-                points.append(item[0])
+        for position, nid, _ in self._ring.keys():
+            if nid == node_id:
+                points.append(position)
         return points
 
     def add_node(self, node_id):
@@ -80,23 +75,17 @@ class HashRing:
 
         for j in range(self._v_node):
             position = self._node_position(node_id, j)
-            # ถ้า position ตรง จะไปเทียบ node_id
-            bisect.insort(self._ring, (position, node_id, j))
+            # เก็บใน AVLTreeMap ด้วยคีย์ (position, node_id, j) จัดการ Collision อัตโนมัติ
+            self._ring[(position, node_id, j)] = node_id
         return True
 
-    def get_node(self, c, s):   # c = ที่มา , s = ลำดับ
+    def get_node(self, c, s):  # c = ที่มา , s = ลำดับ
         if not self._ring:
             return None
 
         guest_pos = self._guest_position(c, s)
-
-        idx = bisect.bisect_left(self._ring, (guest_pos,))
-
-        # ไม่มีจุดที่มีตำแหน่งมากกว่าหรือเท่ากับแขก ให้วนกลับไปเลือกจุดแรกของวงแหวน
-        if idx >= len(self._ring):
-            idx = 0
-
-        return self._ring[idx][1]    # ดึง node_id ใน tuple
+        result = self._ring.find_ceil_or_first((guest_pos,))
+        return result[1] if result else None
 
     def remove_node(self, node_id):
         # ลบรหัสอาคารที่ไม่มีอยู่
@@ -109,10 +98,8 @@ class HashRing:
 
         self._nodes.remove(node_id)
 
-        new_ring = []
-        for item in self._ring:      # check ทีละ tuple
-            if item[1] != node_id:
-                new_ring.append(item)
+        for j in range(self._v_node):
+            position = self._node_position(node_id, j)
+            del self._ring[(position, node_id, j)]
 
-        self._ring = new_ring        # เขียนทับ
         return True
