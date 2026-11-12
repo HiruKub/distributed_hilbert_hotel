@@ -98,8 +98,8 @@ class HotelSystem:
     ):
         self.__validate_init_params(N, C, s)
 
-        from experiments.tree_version.hash_ring import HashRing
-        from experiments.tree_version.hash_mod_n import HashModN
+        from experiments.tree_version.hash_ring_tree import HashRing
+        from experiments.tree_version.hash_mod_n_tree import HashModN
         self.__router = HashRing(
             V, str(salt)) if mode == HashType.HASH_RING else HashModN(str(salt))
         self.__guests_by_id = AVLTreeMap()    # (c, s) -> Guest

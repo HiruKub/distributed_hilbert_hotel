@@ -1,4 +1,4 @@
-from experiments.tree_version.hash_ring import hash64
+from experiments.tree_version.hash_ring_tree import hash64
 from experiments.tree_version.avl_tree import OrderStatisticAVLTree
 
 
