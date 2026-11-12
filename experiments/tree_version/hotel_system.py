@@ -1,6 +1,6 @@
 import math
 from enum import Enum
-from core.avl_tree import AVLTreeMap, AVLTreeSet
+from experiments.tree_version.avl_tree import AVLTreeMap, AVLTreeSet
 
 
 class HashType(Enum):
@@ -98,8 +98,8 @@ class HotelSystem:
     ):
         self.__validate_init_params(N, C, s)
 
-        from core.hash_ring import HashRing
-        from core.hash_mod_n import HashModN
+        from experiments.tree_version.hash_ring import HashRing
+        from experiments.tree_version.hash_mod_n import HashModN
         self.__router = HashRing(
             V, str(salt)) if mode == HashType.HASH_RING else HashModN(str(salt))
         self.__guests_by_id = AVLTreeMap()    # (c, s) -> Guest

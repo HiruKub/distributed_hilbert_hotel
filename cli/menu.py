@@ -1,6 +1,6 @@
 import os
 
-from core.hotel_system import HashType, HotelSystem
+from experiments.tree_version.hotel_system import HashType, HotelSystem
 from experiments.run_experiments import (METHOD_NAME, MOD_N, RING, benchmark_once, run_b_case)
 from utils.exporter import export_guests, export_migrations
 from utils.reports import list_rooms, load_stats, verify_consistency

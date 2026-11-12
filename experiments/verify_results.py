@@ -146,7 +146,7 @@ def recompute(b_df, c_df):
     check(bad == 0, f"คำนวณซ้ำ C ({len(sample)} เงื่อนไข): แขกต่ออาคารตรงกับ CSV ทุกอาคาร")
 
     # แฮชคงที่ข้ามการรัน
-    from core.hash_ring import hash64
+    from experiments.tree_version.hash_ring import hash64
     h1, h2 = hash64("guest:1:1"), hash64("guest:1:1")
     check(h1 == h2, f"hash64('guest:1:1') ได้ค่าเดิมเสมอ ({h1}) บันทึกค่านี้ไว้เทียบหลังเปิดโปรแกรมใหม่")
 

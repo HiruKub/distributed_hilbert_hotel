@@ -1,5 +1,5 @@
 import hashlib
-from core.avl_tree import AVLTreeMap, AVLTreeSet
+from experiments.tree_version.avl_tree import AVLTreeMap, AVLTreeSet
 
 
 def hash64(text):  # 8 bytes = 64 bits

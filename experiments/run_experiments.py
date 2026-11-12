@@ -6,7 +6,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.hotel_system import HashType, HotelSystem  # noqa: E402
+from experiments.tree_version.hotel_system import HashType, HotelSystem  # noqa: E402
 from utils.exporter import export_guests, export_migrations, write_csv  # noqa: E402
 from utils.metrics import measure_memory, per_call_time, timed  # noqa: E402
 from utils.reports import list_rooms, load_stats, sorted_node_ids, verify_consistency  # noqa: E402

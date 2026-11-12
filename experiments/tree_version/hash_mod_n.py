@@ -1,5 +1,5 @@
-from core.hash_ring import hash64
-from core.avl_tree import OrderStatisticAVLTree
+from experiments.tree_version.hash_ring import hash64
+from experiments.tree_version.avl_tree import OrderStatisticAVLTree
 
 
 class HashModN:
