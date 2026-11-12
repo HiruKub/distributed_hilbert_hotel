@@ -1,194 +1,11 @@
 import math
 from enum import Enum
+from core.avl_tree import AVLTreeMap, AVLTreeSet
 
 
 class HashType(Enum):
     HASH_RING = "hash_ring"
     HASH_MOD_N = "hash_mod_n"
-
-
-class _AVLMapNode:
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-        self.left = None
-        self.right = None
-        self.height = 1
-
-
-class AVLTreeMap:
-    def __init__(self):
-        self._root = None
-        self._size = 0
-
-    def __len__(self):
-        return self._size
-
-    def __contains__(self, key):
-        return self._find_node(key) is not None
-
-    def __getitem__(self, key):
-        node = self._find_node(key)
-        if not node:
-            raise KeyError(key)
-        return node.value
-
-    def __setitem__(self, key, value):
-        node = self._find_node(key)
-        if node:
-            node.value = value
-        else:
-            self._root = self._insert(self._root, key, value)
-            self._size += 1
-
-    def __delitem__(self, key):
-        if key not in self:
-            raise KeyError(key)
-        self._root = self._delete(self._root, key)
-        self._size -= 1
-
-    def __iter__(self):
-        return iter(self.keys())
-
-    def get(self, key, default=None):
-        node = self._find_node(key)
-        return node.value if node else default
-
-    def keys(self):
-        result = []
-
-        def _inorder(node):
-            if node:
-                _inorder(node.left)
-                result.append(node.key)
-                _inorder(node.right)
-        _inorder(self._root)
-        return result
-
-    def values(self):
-        result = []
-
-        def _inorder(node):
-            if node:
-                _inorder(node.left)
-                result.append(node.value)
-                _inorder(node.right)
-        _inorder(self._root)
-        return result
-
-    def items(self):
-        result = []
-
-        def _inorder(node):
-            if node:
-                _inorder(node.left)
-                result.append((node.key, node.value))
-                _inorder(node.right)
-        _inorder(self._root)
-        return result
-
-    def _find_node(self, key):
-        curr = self._root
-        while curr:
-            if key == curr.key:
-                return curr
-            curr = curr.left if key < curr.key else curr.right
-        return None
-
-    def _height(self, node):
-        return node.height if node else 0
-
-    def _balance_factor(self, node):
-        return self._height(node.left) - self._height(node.right) if node else 0
-
-    def _update_height(self, node):
-        node.height = 1 + max(self._height(node.left),
-                              self._height(node.right))
-
-    def _rotate_right(self, y):
-        x = y.left
-        t2 = x.right
-        x.right = y
-        y.left = t2
-        self._update_height(y)
-        self._update_height(x)
-        return x
-
-    def _rotate_left(self, x):
-        y = x.right
-        t2 = y.left
-        y.left = x
-        x.right = t2
-        self._update_height(x)
-        self._update_height(y)
-        return y
-
-    def _rebalance(self, node):
-        self._update_height(node)
-        balance = self._balance_factor(node)
-        if balance > 1:
-            if self._balance_factor(node.left) < 0:
-                node.left = self._rotate_left(node.left)
-            return self._rotate_right(node)
-        if balance < -1:
-            if self._balance_factor(node.right) > 0:
-                node.right = self._rotate_right(node.right)
-            return self._rotate_left(node)
-        return node
-
-    def _insert(self, node, key, value):
-        if not node:
-            return _AVLMapNode(key, value)
-        if key < node.key:
-            node.left = self._insert(node.left, key, value)
-        else:
-            node.right = self._insert(node.right, key, value)
-        return self._rebalance(node)
-
-    def _min_node(self, node):
-        while node.left:
-            node = node.left
-        return node
-
-    def _delete(self, node, key):
-        if not node:
-            return None
-        if key < node.key:
-            node.left = self._delete(node.left, key)
-        elif key > node.key:
-            node.right = self._delete(node.right, key)
-        else:
-            if not node.left:
-                return node.right
-            if not node.right:
-                return node.left
-            temp = self._min_node(node.right)
-            node.key = temp.key
-            node.value = temp.value
-            node.right = self._delete(node.right, temp.key)
-        return self._rebalance(node)
-
-
-class AVLTreeSet:
-    def __init__(self):
-        self._map = AVLTreeMap()
-
-    def __len__(self):
-        return len(self._map)
-
-    def __contains__(self, item):
-        return item in self._map
-
-    def __iter__(self):
-        return iter(self._map.keys())
-
-    def add(self, item):
-        self._map[item] = True
-
-    def remove(self, item):
-        if item not in self._map:
-            raise KeyError(item)
-        del self._map[item]
 
 
 class MigrationRecord:
@@ -217,14 +34,14 @@ class MigrationRecord:
 class MigrationReport:
     def __init__(self, total_guests_k):
         self.__total_guests_k = total_guests_k
-        self.__migrations_tree = AVLTreeMap()  # เก็บรายการย้ายเรียงตามรหัสแขก (c, s)
+        self.__migrations = AVLTreeMap()  # เก็บรายการย้ายเรียงตามรหัสแขก (c, s)
 
     @property
     def total_guests_k(self): return self.__total_guests_k
     @property
-    def migrations(self): return self.__migrations_tree.values()
+    def migrations(self): return self.__migrations.values()
     @property
-    def migrated_count(self): return len(self.__migrations_tree)
+    def migrated_count(self): return len(self.__migrations)
 
     @property
     def migration_rate(self):
@@ -239,7 +56,7 @@ class MigrationReport:
         return f"{self.migration_rate:.4f} ({self.migrated_count}/{self.__total_guests_k})"
 
     def append_migration(self, record: MigrationRecord):
-        self.__migrations_tree[record.guest_id] = record
+        self.__migrations[record.guest_id] = record
 
     def generate_summary(self) -> str:
         """สร้างข้อความสรุปรายงานการย้าย (Migration Report)"""
@@ -324,9 +141,11 @@ class HotelSystem:
     @property
     def mode(self): return self.__mode.value
 
+    # Method
     def add_guest(self, c: int, s: int):
         node_id = self.__router.get_node(c, s)
 
+        # duplicate
         if (c, s) in self.__guests_by_id:
             raise ValueError(f"มีการเพิ่มแขก ({c},{s})ในระบบแล้ว")
 
@@ -443,8 +262,7 @@ class HotelSystem:
         else:
             self.__router.add_node(node_id)
             self.__guests_by_node[node_id] = AVLTreeSet()
-            for c, s in self.__guests_by_id.keys():
-                guest = self.__guests_by_id[(c, s)]
+            for (c, s), guest in self.__guests_by_id.items():
                 new_node = self.__router.get_node(c, s)
                 old_node = guest.node_id
                 if new_node != old_node:
@@ -487,8 +305,7 @@ class HotelSystem:
             self.__router.remove_node(node_id)
             del self.__guests_by_node[node_id]
 
-            for c, s in self.__guests_by_id.keys():
-                guest = self.__guests_by_id[(c, s)]
+            for (c, s), guest in self.__guests_by_id.items():
                 new_node = self.__router.get_node(c, s)
                 old_node = guest.node_id
                 if new_node != old_node:
