@@ -1,0 +1,8 @@
+เวลาที่รัน   : 2026-11-12T22:48:13
+Python        : 3.14.0 (CPython)
+ระบบปฏิบัติการ : Windows-11-10.0.26300-SP0
+โปรเซสเซอร์    : Intel64 Family 6 Model 186 Stepping 2, GenuineIntel
+พารามิเตอร์    : experiments=['A', 'B', 'C'], salts=[0, 1, 2], quick=False
+หน่วยความจำ   : tracemalloc (เฉพาะส่วนที่ Python ติดตาม ไม่ใช่ทั้งโปรเซส)
+ข้อความที่แฮช  : guest:{c}:{s} และ node:{node_id}:{j} นำหน้าด้วย salt
+B: เพิ่มอาคารรหัส N+1, ลบอาคารรหัส (N+1)//2 ทั้งสองวิธี

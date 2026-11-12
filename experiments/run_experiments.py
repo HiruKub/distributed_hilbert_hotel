@@ -14,7 +14,7 @@ from utils.reports import list_rooms, load_stats, sorted_node_ids, verify_consis
 NUM_CHANNELS = 10
 DEFAULT_SALTS = (0, 1, 2)
 SEARCH_BATCH = 1000
-RESULTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+RESULTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resultsTree")
 
 RING = HashType.HASH_RING
 MOD_N = HashType.HASH_MOD_N
