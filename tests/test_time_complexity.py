@@ -12,7 +12,7 @@ for path in [project_root, core_dir]:
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from experiments.tree_version.hotel_system_tree import HotelSystem, HashType
+from core.hotel_system import HotelSystem, HashType
 from core.guest import Guest
 
 

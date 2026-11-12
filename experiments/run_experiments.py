@@ -6,7 +6,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from experiments.tree_version.hotel_system_tree import HashType, HotelSystem  # noqa: E402
+from core.hotel_system import HashType, HotelSystem  # noqa: E402
 from utils.exporter import export_guests, export_migrations, write_csv  # noqa: E402
 from utils.metrics import measure_memory, per_call_time, timed  # noqa: E402
 from utils.reports import list_rooms, load_stats, sorted_node_ids, verify_consistency  # noqa: E402
@@ -14,7 +14,7 @@ from utils.reports import list_rooms, load_stats, sorted_node_ids, verify_consis
 NUM_CHANNELS = 10
 DEFAULT_SALTS = (0, 1, 2)
 SEARCH_BATCH = 1000
-RESULTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resultsTree")
+RESULTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
 
 RING = HashType.HASH_RING
 MOD_N = HashType.HASH_MOD_N
