@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_RESULTS = os.path.join(HERE, "results")
-DEFAULT_OUT = os.path.join(HERE, "results")
+DEFAULT_RESULTS = os.path.join(HERE, "resultsTree")
+DEFAULT_OUT = os.path.join(HERE, "resultsTree")
 
 
 def _agg(df, x, y):
