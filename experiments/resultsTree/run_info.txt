@@ -7,3 +7,4 @@ Python        : 3.14.0 (CPython)
 โครงสร้างข้อมูล : AVL Tree (HashRing, HashModN, HotelSystem)
 ข้อความที่แฮช  : guest:{c}:{s} และ node:{node_id}:{j} นำหน้าด้วย salt
 B: เพิ่มอาคารรหัส N+1, ลบอาคารรหัส (N+1)//2 ทั้งสองวิธี
+sample_guests.csv / sample_migrations.csv: N=3, V=8, ช่องทาง=3 (40, 30, 30 คน), โหมด=hash_ring, salt=0, เพิ่มอาคารรหัส 4
